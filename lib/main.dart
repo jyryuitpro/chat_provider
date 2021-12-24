@@ -1,5 +1,6 @@
 import 'package:chat_provider/pages/home_page.dart';
 import 'package:chat_provider/pages/login_page.dart';
+import 'package:chat_provider/pages/register_page.dart';
 import 'package:chat_provider/pages/splash_page.dart';
 import 'package:chat_provider/provider/authentication_provider.dart';
 import 'package:chat_provider/services/navigation_service.dart';
@@ -47,6 +48,7 @@ class MainApp extends StatelessWidget {
         initialRoute: '/login',
         routes: {
           '/login': (context) => LoginPage(),
+          '/register': (context) => RegisterPage(),
           '/home': (context) => HomePage(),
         },
       ),
