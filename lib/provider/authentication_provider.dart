@@ -25,20 +25,22 @@ class AuthenticationProvider extends ChangeNotifier {
           (_snapshot) {
             print('_snapshot: $_snapshot');
             print('_snapshot.data(): ${_snapshot.data()}');
-            Map<String, dynamic> _userData =
-                _snapshot.data()! as Map<String, dynamic>;
-            print('_userData: $_userData');
-            user = ChatUser.fromJSON(
-              {
-                'uid': _user.uid,
-                'name': _userData['name'],
-                'email': _userData['email'],
-                'image': _userData['image'],
-                'last_active': _userData['last_active'],
-              },
-            );
-            print('user: ${user.toMap()}');
-            _navigationService.removeAndNavigateToRoute('/home');
+            if (_snapshot.data() != null) {
+              Map<String, dynamic> _userData =
+                  _snapshot.data() as Map<String, dynamic>;
+              print('_userData: $_userData');
+              user = ChatUser.fromJSON(
+                {
+                  'uid': _user.uid,
+                  'name': _userData['name'],
+                  'email': _userData['email'],
+                  'image': _userData['image'],
+                  'last_active': _userData['last_active'],
+                },
+              );
+              print('user: ${user.toMap()}');
+              _navigationService.removeAndNavigateToRoute('/home');
+            }
           },
         );
       } else {
@@ -56,6 +58,25 @@ class AuthenticationProvider extends ChangeNotifier {
       print(_auth.currentUser);
     } on FirebaseException catch (e) {
       print('Error logging user into Firebase');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<String?> registerUserUsingEmailAndPassword(String _email, String _password) async {
+    try {
+      UserCredential _credentials = await _auth.createUserWithEmailAndPassword(email: _email, password: _password);
+      return _credentials.user!.uid;
+    } on FirebaseException catch (e) {
+      print('Error registering user.');
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      await _auth.signOut();
     } catch (e) {
       print(e);
     }

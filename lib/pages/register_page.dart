@@ -1,10 +1,15 @@
+import 'package:chat_provider/provider/authentication_provider.dart';
+import 'package:chat_provider/services/cloud_storage_service.dart';
+import 'package:chat_provider/services/database_service.dart';
 import 'package:chat_provider/services/media_service.dart';
+import 'package:chat_provider/services/navigation_service.dart';
 import 'package:chat_provider/widgets/custom_input_fields.dart';
 import 'package:chat_provider/widgets/rounded_button.dart';
 import 'package:chat_provider/widgets/rounded_image.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
+import 'package:provider/provider.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({Key? key}) : super(key: key);
@@ -16,6 +21,11 @@ class RegisterPage extends StatefulWidget {
 class _RegisterPageState extends State<RegisterPage> {
   late double _deviceHeight;
   late double _deviceWidth;
+
+  late AuthenticationProvider _auth;
+  late DatabaseService _db;
+  late CloudStorageService _cloudStorageService;
+  late NavigationService _navigationService;
 
   PlatformFile? _profileImage;
 
@@ -29,6 +39,11 @@ class _RegisterPageState extends State<RegisterPage> {
   Widget build(BuildContext context) {
     _deviceHeight = MediaQuery.of(context).size.height;
     _deviceWidth = MediaQuery.of(context).size.width;
+    _auth = Provider.of<AuthenticationProvider>(context);
+    _db = GetIt.instance.get<DatabaseService>();
+    _cloudStorageService = GetIt.instance.get<CloudStorageService>();
+    _navigationService = GetIt.instance.get<NavigationService>();
+
     return _buildUI();
   }
 
@@ -110,7 +125,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   _name = _value;
                 });
               },
-              regEx: r".{8,}",
+              regEx: r".{6,}",
               hintText: 'Name',
               obscureText: false,
             ),
@@ -147,7 +162,14 @@ class _RegisterPageState extends State<RegisterPage> {
       height: _deviceHeight * 0.065,
       width: _deviceWidth * 0.65,
       onPressed: () async {
-
+        if (_registerFormKey.currentState!.validate() && _profileImage != null) {
+          _registerFormKey.currentState!.save();
+          String? _uid = await _auth.registerUserUsingEmailAndPassword(_email!, _password!);
+          String? _imageURL = await _cloudStorageService.saveUserImageToStorage(_uid!, _profileImage!);
+          await _db.createUser(_uid, _name!, _email!, _imageURL!);
+          await _auth.logout();
+          await _auth.loginUsingEmailAndPassword(_email!, _password!);
+        }
       },
     );
   }
